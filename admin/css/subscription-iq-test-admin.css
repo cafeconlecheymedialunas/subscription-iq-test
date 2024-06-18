@@ -2,3 +2,18 @@
  * All of the CSS for your admin-specific functionality should be
  * included in this file.
  */
+
+ .cf-text__input.readonly-field{
+    cursor: not-allowed;
+ }
+
+ .cf-text__input::after {
+    content: ''; /* Añadir un contenido vacío */
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-color: rgba(255, 255, 255, 0.5); /* Fondo semi-transparente */
+    pointer-events: none; /* Permitir que eventos de ratón pasen a través */
+}

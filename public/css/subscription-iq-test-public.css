@@ -2,3 +2,124 @@
  * All of the CSS for your public-facing functionality should be
  * included in this file.
  */
+ .subscription-iq-test-form{
+    max-width:990px;
+    margin:0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+ }
+ .subscription-iq-test-form .step{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+ }
+ .subscription-iq-test-form .options{
+    margin-top:30px;
+    justify-content: space-between;
+    display: flex;
+    flex-wrap: wrap;
+    gap:40px;
+    max-width: 600px;
+    margin: 0 auto;
+ }
+ .subscription-iq-test-form .options label{
+   width: calc( 33.3% - 70px);
+   display: flex;
+   justify-content: center;
+   /* height: 100px; */
+   padding: 20px 0;
+ }
+ .subscription-iq-test-form .options input{
+    display:none;
+ }
+ .subscription-iq-test-form .options img{
+    width: 80px;
+    cursor:pointer;
+    /* height: auto; */
+ }
+ .subscription-iq-test-form .button-container{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap:20px;
+    margin-top:30px;
+ }
+ .subscription-iq-test-form button[disabled] {
+    cursor: default;
+    opacity: .5;
+    background-color: #159C85;
+    color: #FFFFFF;
+}
+
+.subscription-iq-test-form button {
+    background-color: #159C85;
+    box-shadow: 0 1px 4px 0 rgba(0, 0, 0, .6);
+    color: #FFFFFF;
+}
+
+.subscription-iq-test-show{
+    min-height: 100vh;
+}
+
+.ast-container{
+    padding-left: 0;
+    padding-right: 0;
+}
+
+@media (min-width: 922px) {
+    .ast-container {
+        max-width:100%;
+    }
+}
+
+.subscription-iq-test-show  h1{
+    font-family: "Roboto", Sans-serif;
+    font-size: 57px;
+    font-weight: 600;
+    line-height: 1.1em;
+    color: #FFFFFF;
+}
+.subscription-iq-test-show  p{
+    color: #DADADA;
+    font-family: "Poppins", Sans-serif;
+}
+.subscription-iq-test-show {
+   padding: 2rem 3rem;
+   display:flex;
+   flex-direction: column;
+   justify-content: center;
+   align-items: center;
+}
+
+.subscription-iq-test-show .respuestas {
+ height:300px;
+ overflow-y: scroll;
+ background-color: white;
+ padding:30px 50px;
+ max-width:600px;
+ margin:0 auto;
+ }
+
+ .subscription-iq-test-show .opciones {
+display:flex;
+gap:30px;
+margin-bottom:20px;
+}
+
+.subscription-iq-test-show .opciones .opcion{
+ width:calc( 16.66% - 30px);
+}
+.subscription-iq-test-show .image-question{
+  width:100px;
+  margin-top:15px;
+  margin-bottom: 15px;
+}
+.subscription-iq-test-show .respuestas h3{
+    margin-bottom:0;
+}
+.subscription-iq-test-show .pregunta{
+    border-bottom: 1px solid red;
+    border-top: 1px solid red;
+    margin-bottom:30px;
+}

@@ -31,6 +31,8 @@ class Subscription_Iq_Test_Public {
 	 */
 	private $plugin_name;
 
+	private $order_manager;
+
 	/**
 	 * The version of this plugin.
 	 *
@@ -51,6 +53,7 @@ class Subscription_Iq_Test_Public {
 
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
+		$this->order_manager = new AddToCartEndpoint();
 
 	}
 
@@ -96,8 +99,29 @@ class Subscription_Iq_Test_Public {
 		 * class.
 		 */
 
-		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/subscription-iq-test-public.js', array( 'jquery' ), $this->version, false );
+		 wp_enqueue_script("js_subs", PLUGIN_URL. 'public/js/subscription-iq-test-public.js', array('jquery'), "1.0.0", false);
+
+		 wp_localize_script("js_subs", 'wc_add_to_cart_params', array(
+			 'ajax_url' => admin_url('admin-ajax.php'),
+			 'nonce' => wp_create_nonce('add_to_cart_nonce'),
+			 'redirect_url' => wc_get_checkout_url(),
+		 ));
+	 
+		 wp_enqueue_style(
+			 'css_subs', // Handle
+			 PLUGIN_URL . 'public/css/subscription-iq-test-public.css', // URL to the stylesheet
+			 array(), // Dependencies
+			 '1.0.0', // Version
+			 'all' // Media
+		 );
 
 	}
 
+
+	public function add_product_to_cart(){
+		
+		$this->order_manager->add_product_to_cart();
+	}
+
 }
+

@@ -122,6 +122,15 @@ class Subscription_Iq_Test {
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-subscription-iq-test-public.php';
 
+		
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-add-to-cart-endpoint.php';
+
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-iq-test.php';
+
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-result.php';
+
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-iq-test-result-manager.php';
+
 		$this->loader = new Subscription_Iq_Test_Loader();
 
 	}
@@ -154,9 +163,20 @@ class Subscription_Iq_Test {
 
 		$plugin_admin = new Subscription_Iq_Test_Admin( $this->get_plugin_name(), $this->get_version() );
 
+		$iq_test = new IqTest();
+		$result = new Result();
+		
+
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
 
+		$this->loader->add_action( 'init', $iq_test,"register" );
+		$this->loader->add_action('carbon_fields_register_fields', $iq_test,'register_fields');
+		$this->loader->add_action( 'init', $result,"register" );
+		$this->loader->add_action('carbon_fields_register_fields', $result,'register_fields');
+
+
+		
 	}
 
 	/**
@@ -169,9 +189,14 @@ class Subscription_Iq_Test {
 	private function define_public_hooks() {
 
 		$plugin_public = new Subscription_Iq_Test_Public( $this->get_plugin_name(), $this->get_version() );
+		$iq_test_result_manager = IQ_Test_Result_Manager::get_instance();
+
 
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles' );
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
+
+		$this->loader->add_action('wp_ajax_iq_test_save_responses', $iq_test_result_manager, 'process_form');
+        $this->loader->add_action('wp_ajax_nopriv_iq_test_save_responses', $iq_test_result_manager, 'process_form');
 
 	}
 

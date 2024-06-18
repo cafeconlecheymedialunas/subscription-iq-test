@@ -82,7 +82,7 @@ class Subscription_Iq_Test_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-	public function enqueue_scripts() {
+	public function enqueue_scripts($hook) {
 
 		/**
 		 * This function is provided for demonstration purposes only.
@@ -96,7 +96,19 @@ class Subscription_Iq_Test_Admin {
 		 * class.
 		 */
 
-		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/subscription-iq-test-admin.js', array( 'jquery' ), $this->version, false );
+		 if (!is_admin()) {
+			return;
+		}
+	
+		// Obtener la pantalla actual
+		$screen = get_current_screen();
+	
+		// Verificar si estamos en la pantalla de edición de 'iq_result'
+		if ($screen->post_type === 'iq_result' && ($hook === 'post.php' || $hook === 'post-new.php')) {
+			wp_enqueue_script("js_subs_admin", plugin_dir_url(__FILE__) . 'admin/js/subscription-iq-test-admin.js', array('jquery'), $this->version, false);
+	
+		}
+	
 
 	}
 
