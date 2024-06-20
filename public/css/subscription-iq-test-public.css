@@ -91,12 +91,34 @@
    justify-content: center;
    align-items: center;
 }
+.subscription-iq-test-show  ::-webkit-scrollbar {
+    width: 10px;
+  }
+  
+  /* Track */
+  .subscription-iq-test-show  ::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 5px;
+
+  }
+  
+  /* Handle */
+  .subscription-iq-test-show  ::-webkit-scrollbar-thumb {
+    background: rgb(0, 26, 79);
+    border-radius: 5px;
+  }
+  
+  /* Handle on hover */
+  .subscription-iq-test-show  ::-webkit-scrollbar-thumb:hover {
+    background: rgb(0, 26, 79);
+    border-radius: 5px;
+  }
 
 .subscription-iq-test-show .respuestas {
  height:300px;
  overflow-y: scroll;
  background-color: white;
- padding:30px 50px;
+ padding:30px;
  max-width:600px;
  margin:0 auto;
  }
@@ -111,7 +133,7 @@ margin-bottom:20px;
  width:calc( 16.66% - 30px);
 }
 .subscription-iq-test-show .image-question{
-  width:100px;
+  width:70px;
   margin-top:15px;
   margin-bottom: 15px;
 }
@@ -119,7 +141,27 @@ margin-bottom:20px;
     margin-bottom:0;
 }
 .subscription-iq-test-show .pregunta{
-    border-bottom: 1px solid red;
-    border-top: 1px solid red;
+ border-top: 1px solid #e6e6e6bf;
+ /* margin-bottom:30px; */
+ padding: 20px 40px;
+}
+
+.subscription-iq-test-show .pregunta:last-of-type{
+ 
+    border-bottom: 1px solid #e6e6e6;
     margin-bottom:30px;
 }
+
+.icon {
+    margin-left: 10px;
+    font-size: 18px; /* Ajusta el tamaño del ícono según sea necesario */
+  }
+  
+  .correct-icon {
+    color: green; /* Color verde para respuestas correctas */
+  }
+  
+  .incorrect-icon {
+    color: red; /* Color rojo para respuestas incorrectas */
+  }
+  

@@ -125,6 +125,8 @@
                 data: formData,
                 success: function(response) {
                     console.log(response);
+                    // After form submission is successful, add the product to the cart
+                    addProductToCart();
                 },
                 error: function(xhr, status, error) {
                     console.log(xhr.responseText);
@@ -132,9 +134,8 @@
             });
         });
 
-        $('#custom-add-to-cart').on('click', function(e) {
-            e.preventDefault();
-            var product_id = $(this).data('product-id');
+        function addProductToCart() {
+            var product_id = $('#custom-add-to-cart').data('product-id');
 
             $.ajax({
                 type: 'POST',
@@ -151,6 +152,12 @@
                     }
                 }
             });
+        }
+
+        $('#custom-add-to-cart').on('click', function(e) {
+            e.preventDefault();
+            // Trigger form submission
+            $('#iq-test-form').submit();
         });
     });
 </script>

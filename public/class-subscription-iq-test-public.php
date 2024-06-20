@@ -105,6 +105,7 @@ class Subscription_Iq_Test_Public {
 			 'ajax_url' => admin_url('admin-ajax.php'),
 			 'nonce' => wp_create_nonce('add_to_cart_nonce'),
 			 'redirect_url' => wc_get_checkout_url(),
+			 "product_id" => 867
 		 ));
 	 
 		 wp_enqueue_style(
@@ -114,6 +115,8 @@ class Subscription_Iq_Test_Public {
 			 '1.0.0', // Version
 			 'all' // Media
 		 );
+		
+		
 
 	}
 

@@ -55,13 +55,14 @@ class IqTest
                                 )),
                         )),
 
-                        Field::make('complex', 'pregunta_baremos', __('Baremos IQ'))
-                        ->set_layout("tabbed-horizontal")
-                        ->add_fields(array(
-                           
-                            Field::make('text', 'baremo_iq', __('Leyenda')),
-                            
-                        )),
+                       
+                )),
+                Field::make('complex', 'pregunta_baremos', __('Baremos IQ'))
+                ->set_layout("tabbed-horizontal")
+                ->add_fields(array(
+                    Field::make('text', 'baremo_cantidad_iq', __('Cantidad de respuestas correctas')),
+                    Field::make('text', 'baremo_iq', __('IQ')),
+                    
                 )),
         ));
     }
