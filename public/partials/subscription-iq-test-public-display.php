@@ -6,12 +6,13 @@
 
     $test_id = intval($atts['test_id']);
 
+    $user_id = get_current_user_id();
+
     if ($test_id <= 0) {
         echo '<p>Se requiere proporcionar un ID de test válido.</p>';
         return;
     }
 
-    // Obtener el test por su ID
     $test = get_post($test_id);
 
     if (!$test || $test->post_type !== 'iq_test') {
@@ -19,7 +20,7 @@
         return;
     }
 
-    $preguntas = carbon_get_post_meta($test_id, 'preguntas'); // Obtener las preguntas del test
+    $preguntas = carbon_get_post_meta($test_id, 'questions'); // Obtener las preguntas del test
 
     if (!$preguntas) {
         echo '<p>No hay preguntas disponibles para este test.</p>';
@@ -36,19 +37,19 @@
             $index = $index + 1;
             ?>
             <div class="step" id="step-<?php echo $step; ?>">
-                <h2><?php echo $pregunta['pregunta_titulo']; ?></h2> 
-                <?php if ($pregunta['pregunta_imagen']): ?>
-                    <img src="<?php echo wp_get_attachment_image_url($pregunta['pregunta_imagen']); ?>"/>
+                <h2><?php echo $pregunta['question_title']; ?></h2> 
+                <?php if ($pregunta['question_image']): ?>
+                    <img src="<?php echo wp_get_attachment_image_url($pregunta['question_image']); ?>"/>
                 <?php endif; ?>
                 <div class="options">
-                    <?php foreach ($pregunta['pregunta_opciones'] as $subIndex => $opcion): 
+                    <?php foreach ($pregunta['question_options'] as $subIndex => $opcion): 
                       
                         $subIndex = $subIndex + 1;
                         $key = $index . "_" . $subIndex;
                         ?>
                         <label for="<?php echo $key; ?>">
                             <input type="radio" id="<?php echo $key; ?>" name="q<?php echo $index; ?>" value="<?php echo $key; ?>"/>
-                            <img src="<?php echo wp_get_attachment_image_url($opcion['opcion']); ?>" />
+                            <img src="<?php echo wp_get_attachment_image_url($opcion['option_image']); ?>" />
                         </label>
                     <?php endforeach; ?>
                 </div>
@@ -118,6 +119,8 @@
             e.preventDefault();
 
             var formData = $(this).serialize();
+
+            console.log(formData)
 
             $.ajax({
                 type: 'POST',

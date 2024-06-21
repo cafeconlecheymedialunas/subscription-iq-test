@@ -8,8 +8,8 @@
  * @link       https://https://github.com/cafeconlecheymedialunas
  * @since      1.0.0
  *
- * @package    Subscription_Iq_Test
- * @subpackage Subscription_Iq_Test/admin/partials
+ * @package    SubscriptionIqTest
+ * @subpackage SubscriptionIqTest/admin/partials
  */
 ?>
 

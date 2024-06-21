@@ -28,7 +28,7 @@ define("PLUGIN_URL",plugin_dir_url(__FILE__));
  */
 function activate_plugin_name() {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/class-subscription-iq-test-activator.php';
-    Subscription_Iq_Test_Activator::activate();
+    SubscriptionIqTestActivator::activate();
 }
 
 /**
@@ -37,7 +37,7 @@ function activate_plugin_name() {
  */
 function deactivate_plugin_name() {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/class-subscription-iq-test-deactivator.php';
-	Subscription_Iq_Test_Deactivator::deactivate();
+	SubscriptionIqTestDeactivator::deactivate();
 }
 
 register_activation_hook( __FILE__, 'activate_plugin_name' );
@@ -60,7 +60,7 @@ require plugin_dir_path( __FILE__ ) . 'includes/class-subscription-iq-test.php';
  */
 function run_plugin_name() {
 
-	$plugin = new Subscription_Iq_Test();
+	$plugin = new SubscriptionIqTest();
 	$plugin->run();
 
 }

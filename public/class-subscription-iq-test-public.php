@@ -6,8 +6,8 @@
  * @link       https://https://github.com/cafeconlecheymedialunas
  * @since      1.0.0
  *
- * @package    Subscription_Iq_Test
- * @subpackage Subscription_Iq_Test/public
+ * @package    SubscriptionIqTest
+ * @subpackage SubscriptionIqTest/public
  */
 
 /**
@@ -16,11 +16,11 @@
  * Defines the plugin name, version, and two examples hooks for how to
  * enqueue the public-facing stylesheet and JavaScript.
  *
- * @package    Subscription_Iq_Test
- * @subpackage Subscription_Iq_Test/public
+ * @package    SubscriptionIqTest
+ * @subpackage SubscriptionIqTest/public
  * @author     Mauro Gaitan <maurodeveloper86@gmail.com>
  */
-class Subscription_Iq_Test_Public {
+class SubscriptionIqTestPublic {
 
 	/**
 	 * The ID of this plugin.
@@ -68,10 +68,10 @@ class Subscription_Iq_Test_Public {
 		 * This function is provided for demonstration purposes only.
 		 *
 		 * An instance of this class should be passed to the run() function
-		 * defined in Subscription_Iq_Test_Loader as all of the hooks are defined
+		 * defined in SubscriptionIqTestLoader as all of the hooks are defined
 		 * in that particular class.
 		 *
-		 * The Subscription_Iq_Test_Loader will then create the relationship
+		 * The SubscriptionIqTestLoader will then create the relationship
 		 * between the defined hooks and the functions defined in this
 		 * class.
 		 */
@@ -91,10 +91,10 @@ class Subscription_Iq_Test_Public {
 		 * This function is provided for demonstration purposes only.
 		 *
 		 * An instance of this class should be passed to the run() function
-		 * defined in Subscription_Iq_Test_Loader as all of the hooks are defined
+		 * defined in SubscriptionIqTestLoader as all of the hooks are defined
 		 * in that particular class.
 		 *
-		 * The Subscription_Iq_Test_Loader will then create the relationship
+		 * The SubscriptionIqTestLoader will then create the relationship
 		 * between the defined hooks and the functions defined in this
 		 * class.
 		 */

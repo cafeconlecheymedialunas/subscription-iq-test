@@ -9,8 +9,8 @@
  * @link       https://https://github.com/cafeconlecheymedialunas
  * @since      1.0.0
  *
- * @package    Subscription_Iq_Test
- * @subpackage Subscription_Iq_Test/includes
+ * @package    SubscriptionIqTest
+ * @subpackage SubscriptionIqTest/includes
  */
 
 /**
@@ -20,11 +20,11 @@
  * so that it is ready for translation.
  *
  * @since      1.0.0
- * @package    Subscription_Iq_Test
- * @subpackage Subscription_Iq_Test/includes
+ * @package    SubscriptionIqTest
+ * @subpackage SubscriptionIqTest/includes
  * @author     Mauro Gaitan <maurodeveloper86@gmail.com>
  */
-class Subscription_Iq_Test_i18n {
+class SubscriptionIqTesti18n {
 
 
 	/**

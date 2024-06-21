@@ -1,56 +1,66 @@
 <?php
 use Carbon_Fields\Container;
 use Carbon_Fields\Field;
-class Result{
-    public function __construct(){
-        
-        add_action('init', array($this, 'register'));
-        add_action('carbon_fields_register_fields', array($this,'register_fields') );
+
+class Result {
+ 
+    private static $instance = null;
+
+    private function __construct() {}
+
+    public static function getInstance() {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
     }
 
-    public function register(){
-        $labels2 = array(
-            'name' => 'Respuesta',
-            'singular_name' => 'Resultado',
-            'menu_name' => 'Resultados IQ Test',
-            'name_admin_bar' => 'Resultado',
-            'add_new' => 'Añadir Nueva',
-            'add_new_item' => 'Añadir Nueva Resultado',
-            'new_item' => 'Nueva Resultado',
-            'edit_item' => 'Editar Resultado',
-            'view_item' => 'Ver Resultado',
-            'all_items' => 'Todas las Resultados',
-            'search_items' => 'Buscar Resultados',
-            'not_found' => 'No se encontraron Resultados',
-            'not_found_in_trash' => 'No se encontraron Resultados en la papelera',
-        );
-    
-        $args2 = array(
-            'labels' => $labels2,
+    public function register() {
+        $labels = [
+            'name' => 'Results',
+            'singular_name' => 'Result',
+            'menu_name' => 'IQ Test Results',
+            'name_admin_bar' => 'Result',
+            'add_new' => 'Add New',
+            'add_new_item' => 'Add New Result',
+            'new_item' => 'New Result',
+            'edit_item' => 'Edit Result',
+            'view_item' => 'View Result',
+            'all_items' => 'All Results',
+            'search_items' => 'Search Results',
+            'not_found' => 'No results found',
+            'not_found_in_trash' => 'No results found in trash',
+        ];
+
+        $args = [
+            'labels' => $labels,
             'public' => true,
             'has_archive' => true,
-            'supports' => array('title', 'editor'),
+            'supports' => ['title', 'editor'],
             'show_in_rest' => true,
-            "menu_icon" => "dashicons-list-view",
-        );
-    
-        register_post_type('iq_result', $args2);
+            'menu_icon' => 'dashicons-list-view',
+        ];
+
+        register_post_type('iq_result', $args);
     }
 
-    public function register_fields(){
-        Container::make('post_meta', 'Resultados Iq Test')
+    public function registerFields() {
+        Container::make('post_meta', 'IQ Test Results')
         ->where('post_type', '=', 'iq_result')
-        ->add_fields(array(
-
-            Field::make('text', 'usuario', __('Id del usuario'))->set_classes('readonly-field'),
-            Field::make('text', 'test', __('Id del test'))->set_classes('readonly-field'),
-            Field::make('text', 'total_resultados', __('Resultado total del test'))->set_classes('readonly-field'),
-            Field::make('date_time', 'fecha_resultados', __('Fecha del test'))->set_classes('readonly-field'),
-            Field::make('complex', 'respuestas', __('Respuestas del test'))
-                ->set_layout("tabbed-horizontal")
-                ->add_fields(array(
-                    Field::make('text', 'respuesta', __('Respuesta Nro.'))->set_classes('readonly-field'),
-                )),
-        ));
+        ->add_fields([
+            Field::make('text', 'user_id', __('User ID'))->set_classes('readonly-field'),
+            Field::make('text', 'test_id', __('Test ID'))->set_classes('readonly-field'),
+            Field::make('text', 'total_correct_responses', __('Total Correct Responses'))->set_classes('readonly-field'),
+            Field::make('text', 'total_score', __('Total IQ Test Score'))->set_classes('readonly-field'),
+            Field::make('date_time', 'result_date', __('Test Date'))->set_classes('readonly-field'),
+            Field::make('complex', 'user_responses', __('User Responses'))
+                ->set_layout('tabbed-horizontal')
+                ->add_fields([
+                    Field::make('image', 'response_image', __('Image'))->set_classes('readonly-field'),
+                    Field::make('text', 'response_value', __('Response Value'))->set_classes('readonly-field'),
+                ]),
+        ]);
+    
     }
 }
+

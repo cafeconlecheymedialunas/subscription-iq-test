@@ -1,25 +1,26 @@
 <?php 
-$iq_test_manager = IQ_Test_Result_Manager::get_instance();
-$resultados = $iq_test_manager->ver_resultados(898);
+$iq_test_manager = IQTestResultManager::getInstance();
+$result = $iq_test_manager->viewResults(898);
+
 ?>
-<pre><?php print_r($resultados["results"]); ?></pre>
+<pre><?php print_r($result["results"]); ?></pre>
 <div class="subscription-iq-test-show" style="background-image: url(http://booking-woocommerce-valijas.test:83/wp-content/uploads/2024/05/home-2.jpg);">
-  <?php if (!is_wp_error($resultados)): ?>
+  <?php if (!is_wp_error($result)): ?>
     <h1>Iq Test</h1>
-    <p><?php echo $resultados["results"]["user"]; ?></p>
-    <p>Correct Answers: <?php echo $resultados["results"]["total_correctas"]; ?>/<?php echo count($resultados["test"]["preguntas"]); ?> </p>
-    <h2>Your Iq: <?php echo $resultados["results"]["iq"]; ?></h2>
+    <p><?php echo $result["results"]["user"]; ?></p>
+    <p>Correct Answers: <?php echo $result["results"]["total_correct"]; ?>/<?php echo count($result["test"]["preguntas"]); ?> </p>
+    <h2>Your Iq: <?php echo $result["results"]["iq"]; ?></h2>
     <div class="respuestas">
-      <?php foreach($resultados["test"]["preguntas"] as $index => $pregunta):
+      <?php foreach($result["test"]["questions"] as $index => $pregunta):
         $i = $index + 1;
-        $respuesta_usuario = $resultados["results"]["respuestas_usuario"][$i]['respuesta'];
-        $respuesta_correcta = $resultados["test"]["respuestas_correctas"][$i]; 
+        $respuesta_usuario = $result["results"]["user_responses"][$i]['response'];
+        $respuesta_correcta = $result["test"]["correct_responses"][$i]; 
       ?>
         <div class="pregunta">
-          <h3><?php echo $pregunta["pregunta_titulo"]; ?>:</h3>
-          <img class="image-question" src="<?php echo wp_get_attachment_image_url($pregunta["pregunta_imagen"]); ?>"/>
+          <h3><?php echo $pregunta["question_title"]; ?>:</h3>
+          <img class="image-question" src="<?php echo wp_get_attachment_image_url($pregunta["question_image"]); ?>"/>
           <div class="opciones">
-            <?php foreach($pregunta["pregunta_opciones"] as $subIndex => $opcion):
+            <?php foreach($pregunta["question_options"] as $subIndex => $opcion):
 
               $y = $subIndex + 1;
           
@@ -28,7 +29,7 @@ $resultados = $iq_test_manager->ver_resultados(898);
               $is_user_answer = ($respuesta_usuario == $opcion_id); 
             ?>
               <div class="opcion <?php echo $is_user_answer ? ($is_correct ? 'user-correct' : 'user-incorrect') : ''; ?>">
-                <img src="<?php echo wp_get_attachment_image_url($opcion["opcion"]); ?>" alt="">
+                <img src="<?php echo wp_get_attachment_image_url($opcion["image"]); ?>" alt="">
                 <?php if ($is_user_answer): ?>
                   <?php if ($is_correct): ?>
                     <span class="icon correct-icon">
@@ -47,6 +48,6 @@ $resultados = $iq_test_manager->ver_resultados(898);
       <?php endforeach; ?>
     </div>
   <?php else: ?>
-    <p><?php echo $resultados->get_error_message(); ?></p>
+    <p><?php echo $result->get_error_message(); ?></p>
   <?php endif; ?>
 </div>

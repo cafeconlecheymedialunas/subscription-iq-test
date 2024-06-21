@@ -6,8 +6,8 @@
  * @link       https://https://github.com/cafeconlecheymedialunas
  * @since      1.0.0
  *
- * @package    Subscription_Iq_Test
- * @subpackage Subscription_Iq_Test/includes
+ * @package    SubscriptionIqTest
+ * @subpackage SubscriptionIqTest/includes
  */
 
 /**
@@ -17,11 +17,11 @@
  * the plugin, and register them with the WordPress API. Call the
  * run function to execute the list of actions and filters.
  *
- * @package    Subscription_Iq_Test
- * @subpackage Subscription_Iq_Test/includes
+ * @package    SubscriptionIqTest
+ * @subpackage SubscriptionIqTest/includes
  * @author     Mauro Gaitan <maurodeveloper86@gmail.com>
  */
-class Subscription_Iq_Test_Loader {
+class SubscriptionIqTestLoader {
 
 	/**
 	 * The array of actions registered with WordPress.

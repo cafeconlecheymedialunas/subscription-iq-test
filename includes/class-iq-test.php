@@ -1,69 +1,79 @@
 <?php
 use Carbon_Fields\Container;
 use Carbon_Fields\Field;
+
 class IqTest
 {
+    private static $instance = null;
+
+    private function __construct() {}
+
+    public static function getInstance()
+    {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+    
     public function register()
     {
-        $labels = array(
+        $labels = [
             'name' => 'Tests',
             'singular_name' => 'Test',
-            'menu_name' => 'Tests IQ',
+            'menu_name' => 'IQ Tests',
             'name_admin_bar' => 'Test',
-            'add_new' => 'Añadir Nuevo',
-            'add_new_item' => 'Añadir Nuevo Test',
-            'new_item' => 'Nuevo Test',
-            'edit_item' => 'Editar Test',
-            'view_item' => 'Ver Test',
-            'all_items' => 'Todos los Tests',
-            'search_items' => 'Buscar Tests',
-            'not_found' => 'No se encontraron Tests',
-            'not_found_in_trash' => 'No se encontraron Tests en la papelera',
+            'add_new' => 'Add New',
+            'add_new_item' => 'Add New Test',
+            'new_item' => 'New Test',
+            'edit_item' => 'Edit Test',
+            'view_item' => 'View Test',
+            'all_items' => 'All Tests',
+            'search_items' => 'Search Tests',
+            'not_found' => 'No tests found',
+            'not_found_in_trash' => 'No tests found in trash',
+        ];
 
-        );
-
-        $args = array(
+        $args = [
             'labels' => $labels,
             'public' => true,
             'has_archive' => true,
-            'supports' => array('title', 'editor'),
+            'supports' => ['title', 'editor'],
             'show_in_rest' => true,
-            "menu_icon" => "dashicons-performance",
-        );
+            'menu_icon' => 'dashicons-performance',
+        ];
+
         register_post_type('iq_test', $args);
     }
 
-    public function register_fields(){
-        Container::make('post_meta', 'Preguntas')
-        ->where('post_type', '=', 'iq_test')
-        ->add_fields(array(
-            Field::make('complex', 'preguntas', __('Preguntas'))
-                ->set_layout("tabbed-horizontal")
-                ->add_fields(array(
-                    Field::make('text', 'pregunta_titulo', __('Pregunta')),
-                    Field::make('image', 'pregunta_imagen', __('Imagen principal'))->set_required(true),
-                    Field::make('complex', 'pregunta_opciones', __('Opciones'))
-                        ->set_layout("tabbed-horizontal")
-                        ->add_fields(array(
-                            Field::make('image', 'opcion', __('Imagen de la Opcion'))->set_required(true),
-                            Field::make('text', 'leyenda', __('Leyenda')),
-                            Field::make('radio', 'correcta', __('¿Es la correcta?'))
-                                ->add_options(array(
-                                    'no' => 'No',
-                                    'si' => 'Sí',
-
-                                )),
-                        )),
-
-                       
-                )),
-                Field::make('complex', 'pregunta_baremos', __('Baremos IQ'))
-                ->set_layout("tabbed-horizontal")
-                ->add_fields(array(
-                    Field::make('text', 'baremo_cantidad_iq', __('Cantidad de respuestas correctas')),
-                    Field::make('text', 'baremo_iq', __('IQ')),
-                    
-                )),
-        ));
+    public function registerFields()
+    {
+        Container::make('post_meta', 'Questions')
+            ->where('post_type', '=', 'iq_test')
+            ->add_fields([
+                Field::make('complex', 'questions', __('Questions'))
+                    ->set_layout('tabbed-horizontal')
+                    ->add_fields([
+                        Field::make('text', 'question_title', __('Question')),
+                        Field::make('image', 'question_image', __('Main Image'))->set_required(true),
+                        Field::make('complex', 'question_options', __('Options'))
+                            ->set_layout('tabbed-horizontal')
+                            ->add_fields([
+                                Field::make('image', 'option_image', __('Option Image'))->set_required(true),
+                                Field::make('text', 'caption', __('Caption')),
+                                Field::make('radio', 'correct', __('Is Correct?'))
+                                    ->add_options([
+                                        'no' => 'No',
+                                        'yes' => 'Yes',
+                                    ]),
+                            ]),
+                    ]),
+                Field::make('complex', 'question_scales', __('IQ Scales'))
+                    ->set_layout('tabbed-horizontal')
+                    ->add_fields([
+                        Field::make('text', 'scale_correct_count', __('Correct Answer Count')),
+                        Field::make('text', 'scale_iq', __('IQ')),
+                    ]),
+            ]);
     }
 }

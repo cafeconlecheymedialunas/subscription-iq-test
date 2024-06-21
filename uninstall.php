@@ -22,7 +22,7 @@
  * @link       https://https://github.com/cafeconlecheymedialunas
  * @since      1.0.0
  *
- * @package    Subscription_Iq_Test
+ * @package    SubscriptionIqTest
  */
 
 // If uninstall not called from WordPress, then exit.

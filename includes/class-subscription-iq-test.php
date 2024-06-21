@@ -9,8 +9,8 @@
  * @link       https://https://github.com/cafeconlecheymedialunas
  * @since      1.0.0
  *
- * @package    Subscription_Iq_Test
- * @subpackage Subscription_Iq_Test/includes
+ * @package    SubscriptionIqTest
+ * @subpackage SubscriptionIqTest/includes
  */
 
 /**
@@ -23,11 +23,11 @@
  * version of the plugin.
  *
  * @since      1.0.0
- * @package    Subscription_Iq_Test
- * @subpackage Subscription_Iq_Test/includes
+ * @package    SubscriptionIqTest
+ * @subpackage SubscriptionIqTest/includes
  * @author     Mauro Gaitan <maurodeveloper86@gmail.com>
  */
-class Subscription_Iq_Test {
+class SubscriptionIqTest {
 
 	/**
 	 * The loader that's responsible for maintaining and registering all hooks that power
@@ -35,7 +35,7 @@ class Subscription_Iq_Test {
 	 *
 	 * @since    1.0.0
 	 * @access   protected
-	 * @var      Subscription_Iq_Test_Loader    $loader    Maintains and registers all hooks for the plugin.
+	 * @var      SubscriptionIqTestLoader    $loader    Maintains and registers all hooks for the plugin.
 	 */
 	protected $loader;
 
@@ -67,8 +67,8 @@ class Subscription_Iq_Test {
 	 * @since    1.0.0
 	 */
 	public function __construct() {
-		if ( defined( 'SUBSCRIPTION_IQ_TEST_VERSION' ) ) {
-			$this->version = SUBSCRIPTION_IQ_TEST_VERSION;
+		if ( defined( 'SubscriptionIqTest_VERSION' ) ) {
+			$this->version = SubscriptionIqTest_VERSION;
 		} else {
 			$this->version = '1.0.0';
 		}
@@ -86,10 +86,10 @@ class Subscription_Iq_Test {
 	 *
 	 * Include the following files that make up the plugin:
 	 *
-	 * - Subscription_Iq_Test_Loader. Orchestrates the hooks of the plugin.
-	 * - Subscription_Iq_Test_i18n. Defines internationalization functionality.
-	 * - Subscription_Iq_Test_Admin. Defines all hooks for the admin area.
-	 * - Subscription_Iq_Test_Public. Defines all hooks for the public side of the site.
+	 * - SubscriptionIqTestLoader. Orchestrates the hooks of the plugin.
+	 * - SubscriptionIqTesti18n. Defines internationalization functionality.
+	 * - SubscriptionIqTestAdmin. Defines all hooks for the admin area.
+	 * - SubscriptionIqTestPublic. Defines all hooks for the public side of the site.
 	 *
 	 * Create an instance of the loader which will be used to register the hooks
 	 * with WordPress.
@@ -131,14 +131,14 @@ class Subscription_Iq_Test {
 
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-iq-test-result-manager.php';
 
-		$this->loader = new Subscription_Iq_Test_Loader();
+		$this->loader = new SubscriptionIqTestLoader();
 
 	}
 
 	/**
 	 * Define the locale for this plugin for internationalization.
 	 *
-	 * Uses the Subscription_Iq_Test_i18n class in order to set the domain and to register the hook
+	 * Uses the SubscriptionIqTesti18n class in order to set the domain and to register the hook
 	 * with WordPress.
 	 *
 	 * @since    1.0.0
@@ -146,7 +146,7 @@ class Subscription_Iq_Test {
 	 */
 	private function set_locale() {
 
-		$plugin_i18n = new Subscription_Iq_Test_i18n();
+		$plugin_i18n = new SubscriptionIqTesti18n();
 
 		$this->loader->add_action( 'plugins_loaded', $plugin_i18n, 'load_plugin_textdomain' );
 
@@ -161,19 +161,19 @@ class Subscription_Iq_Test {
 	 */
 	private function define_admin_hooks() {
 
-		$plugin_admin = new Subscription_Iq_Test_Admin( $this->get_plugin_name(), $this->get_version() );
+		$plugin_admin = new SubscriptionIqTestAdmin( $this->get_plugin_name(), $this->get_version() );
 
-		$iq_test = new IqTest();
-		$result = new Result();
+		$iq_test = IqTest::getInstance();
+		$result = Result::getInstance();
 		
 
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
 
 		$this->loader->add_action( 'init', $iq_test,"register" );
-		$this->loader->add_action('carbon_fields_register_fields', $iq_test,'register_fields');
+		$this->loader->add_action('carbon_fields_register_fields', $iq_test,'registerFields');
 		$this->loader->add_action( 'init', $result,"register" );
-		$this->loader->add_action('carbon_fields_register_fields', $result,'register_fields');
+		$this->loader->add_action('carbon_fields_register_fields', $result,'registerFields');
 
 
 		
@@ -188,15 +188,15 @@ class Subscription_Iq_Test {
 	 */
 	private function define_public_hooks() {
 
-		$plugin_public = new Subscription_Iq_Test_Public( $this->get_plugin_name(), $this->get_version() );
-		$iq_test_result_manager = IQ_Test_Result_Manager::get_instance();
+		$plugin_public = new SubscriptionIqTestPublic( $this->get_plugin_name(), $this->get_version() );
+		$IQTestResultManager = IQTestResultManager::getInstance();
 
 
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles' );
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
 
-		$this->loader->add_action('wp_ajax_iq_test_save_responses', $iq_test_result_manager, 'process_form');
-        $this->loader->add_action('wp_ajax_nopriv_iq_test_save_responses', $iq_test_result_manager, 'process_form');
+		$this->loader->add_action('wp_ajax_iq_test_save_responses', $IQTestResultManager, 'processForm');
+        $this->loader->add_action('wp_ajax_nopriv_iq_test_save_responses', $IQTestResultManager, 'processForm');
 
 	}
 
@@ -224,7 +224,7 @@ class Subscription_Iq_Test {
 	 * The reference to the class that orchestrates the hooks with the plugin.
 	 *
 	 * @since     1.0.0
-	 * @return    Subscription_Iq_Test_Loader    Orchestrates the hooks of the plugin.
+	 * @return    SubscriptionIqTestLoader    Orchestrates the hooks of the plugin.
 	 */
 	public function get_loader() {
 		return $this->loader;
