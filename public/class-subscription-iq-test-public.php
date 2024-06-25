@@ -78,6 +78,8 @@ class SubscriptionIqTestPublic {
 
 		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/subscription-iq-test-public.css', array(), $this->version, 'all' );
 
+		wp_enqueue_style('font-awesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
+
 	}
 
 	/**
@@ -125,6 +127,65 @@ class SubscriptionIqTestPublic {
 		
 		$this->order_manager->add_product_to_cart();
 	}
+
+	public function add_content_to_my_account()
+    {
+        $iq_test_manager = IQTestResultManager::getInstance();
+        ob_start();
+        if (isset($_GET["test_id"]) && !empty($_GET["test_id"])) {
+            $test_id = intval($_GET["test_id"]);
+
+            $result = $iq_test_manager->viewResult($test_id);
+
+            require_once PLUGIN_URL . 'public/partials/subscription-iq-test-show.php';
+
+        } else {
+            $testResults = $iq_test_manager->getTestResultsByUser();
+            require_once PLUGIN_URL . 'public/partials/subscription-iq-test-list.php';
+        }
+
+        $content = ob_get_clean(); // Obtiene y limpia el contenido del búfer de salida
+        echo $content;
+    }
+
+	public function custom_override_checkout_fields($fields)
+    {
+
+        unset($fields['billing']['billing_phone']);
+        unset($fields['billing']['billing_company']);
+        unset($fields['billing']['billing_country']);
+        unset($fields['billing']['billing_address_1']);
+        unset($fields['billing']['billing_address_2']);
+        unset($fields['billing']['billing_state']);
+        unset($fields['billing']['billing_city']);
+        unset($fields['billing']['billing_postcode']);
+        return $fields;
+    }
+
+    public function remove_tabs_to_my_account($items)
+    {
+        unset($items['edit-address']);
+        unset($items['downloads']);
+        unset($items['wishlist']);
+        return $items;
+    }
+
+    public function add_my_custom_endpoint()
+    {
+        add_rewrite_endpoint('iq-test', EP_ROOT | EP_PAGES);
+    }
+
+    public function add_custom_query_vars($vars)
+    {
+        $vars[] = 'iq-test';
+        return $vars;
+    }
+
+    public function add_custom_menu_item_to_my_account($items)
+    {
+        $items['iq-test'] = 'Iq Tests';
+        return $items;
+    }
 
 }
 

@@ -90,18 +90,6 @@ function iq_test_form_shortcode($atts)
 add_shortcode('iq_test_form', 'iq_test_form_shortcode');
 
 
-function iq_test_show_shortcode($atts)
-{
-
-    ob_start(); // Inicia el almacenamiento en búfer de salida
-
-    require_once plugin_dir_path(__FILE__) . 'public/partials/subscription-iq-test-show.php';
-
-    return ob_get_clean(); // Devuelve el contenido del búfer de salida
-}
-add_shortcode('iq_test_show', 'iq_test_show_shortcode');
-
-
 
 add_action('wp_ajax_add_to_cart_and_redirect', 'add_to_cart_and_redirect');
 add_action('wp_ajax_nopriv_add_to_cart_and_redirect', 'add_to_cart_and_redirect');
@@ -140,60 +128,29 @@ function add_to_cart_and_redirect()
     wp_die();
 }
 
-add_filter('woocommerce_checkout_fields', 'custom_override_checkout_fields');
 
-// Our hooked in function - $fields is passed via the filter!
-function custom_override_checkout_fields($fields)
+
+
+
+
+add_action( 'woocommerce_account_iq-test_endpoint', 'add_content_to_my_account' );
+
+function add_content_to_my_account()
 {
+    $iq_test_manager = IQTestResultManager::getInstance();
+    ob_start();
+    if (isset($_GET["test_id"]) && !empty($_GET["test_id"])) {
+        $test_id = intval($_GET["test_id"]);
 
-    unset($fields['billing']['billing_phone']);
-    unset($fields['billing']['billing_company']);
-    unset($fields['billing']['billing_country']);
-    unset($fields['billing']['billing_address_1']);
-    unset($fields['billing']['billing_address_2']);
-    unset($fields['billing']['billing_state']);
-    unset($fields['billing']['billing_city']);
-    unset($fields['billing']['billing_postcode']);
-    return $fields;
+        $result = $iq_test_manager->viewResult($test_id);
+
+        require_once PLUGIN_URL . 'public/partials/subscription-iq-test-show.php';
+
+    } else {
+        $testResults = $iq_test_manager->getTestResultsByUser();
+        require_once PLUGIN_URL . 'public/partials/subscription-iq-test-list.php';
+    }
+
+    $content = ob_get_clean(); // Obtiene y limpia el contenido del búfer de salida
+    echo $content;
 }
-
-add_filter('woocommerce_account_menu_items', 'bbloomer_remove_address_my_account', 9999);
-
-function bbloomer_remove_address_my_account($items)
-{
-    unset($items['edit-address']);
-    unset($items['downloads']);
-    unset($items['wishlist']);
-    return $items;
-}
-
-function ac_add_my_custom_endpoint() {
-    add_rewrite_endpoint( 'iq-test', EP_ROOT | EP_PAGES );
-}
-  
-add_action( 'init', 'ac_add_my_custom_endpoint' );
-function ac_add_custom_query_vars( $vars ) {
-    $vars[] = 'iq-test';
-    return $vars;
-}
-  
-add_filter( 'query_vars', 'ac_add_custom_query_vars', 0 );
-
-function ac_add_custom_menu_item_my_account( $items ) {
-    $items['iq-test'] = 'Iq Tests';
-    return $items;
-}
-  
-add_filter( 'woocommerce_account_menu_items', 'ac_add_custom_menu_item_my_account' );
-
-function ac_iq_test_content_my_account() {
-    echo 'Congratulations! You just created a iq tests. You can add any content here or add shortcode.';
-    echo do_shortcode( ' /* your shortcode here */ ' );
- }
-   
- add_action( 'woocommerce_account_iq-test_endpoint', 'ac_iq_test_content_my_account' );
-
-
-
-
-

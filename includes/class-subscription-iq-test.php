@@ -121,7 +121,8 @@ class SubscriptionIqTest {
 		 * side of the site.
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-subscription-iq-test-public.php';
-
+		
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-helper.php';
 		
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-add-to-cart-endpoint.php';
 
@@ -130,6 +131,8 @@ class SubscriptionIqTest {
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-result.php';
 
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-iq-test-result-manager.php';
+
+		
 
 		$this->loader = new SubscriptionIqTestLoader();
 
@@ -176,6 +179,9 @@ class SubscriptionIqTest {
 		$this->loader->add_action('carbon_fields_register_fields', $result,'registerFields');
 
 
+	
+
+
 		
 	}
 
@@ -197,6 +203,14 @@ class SubscriptionIqTest {
 
 		$this->loader->add_action('wp_ajax_iq_test_save_responses', $IQTestResultManager, 'processForm');
         $this->loader->add_action('wp_ajax_nopriv_iq_test_save_responses', $IQTestResultManager, 'processForm');
+		
+
+		$this->loader->add_filter( 'woocommerce_account_menu_items',$plugin_public, 'add_custom_menu_item_to_my_account' );
+		$this->loader->add_filter( 'query_vars', $plugin_public,'add_custom_query_vars', 0 );
+		$this->loader->add_action( 'init',$plugin_public, 'add_my_custom_endpoint' );
+		$this->loader->add_filter('woocommerce_account_menu_items', $plugin_public,'remove_tabs_to_my_account', 9999);
+		$this->loader->add_filter('woocommerce_checkout_fields', $plugin_public, 'custom_override_checkout_fields');
+		$this->loader->add_action( 'woocommerce_account_iq-test_endpoint', $plugin_public, 'add_content_to_my_account' );
 
 	}
 

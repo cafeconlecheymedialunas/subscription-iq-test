@@ -16,20 +16,20 @@ class IQTestResultManager
     public function processForm()
     {
         if (!isset($_POST['action']) || $_POST['action'] !== 'iq_test_save_responses') {
-            wp_send_json_error(array('message' => 'Acción no permitida.'));
+            wp_send_json_error(array('message' => 'Action not allowed.'));
         }
 
         $test_id = intval($_POST['test_id']);
         if ($test_id <= 0) {
-            wp_send_json_error(array('message' => 'ID de test no válido.'));
+            wp_send_json_error(array('message' => 'Invalid test ID.'));
         }
 
         $questions = carbon_get_post_meta($test_id, 'questions');
         if (empty($questions)) {
-            wp_send_json_error(array('message' => 'No se encontraron preguntas para este test.'));
+            wp_send_json_error(array('message' => 'No questions found for this test.'));
         }
 
-        $user_responses = $this->procesar_respuestas($questions);
+        $user_responses = $this->process_responses($questions);
         $total_correct_responses = $user_responses['total_correct_responses'];
         unset($user_responses['total_correct_responses']);
 
@@ -37,11 +37,11 @@ class IQTestResultManager
 
         $current_user = wp_get_current_user();
         $question_scales = carbon_get_post_meta($test_id, 'question_scales');
-        $iq = $this->obtener_iq($question_scales,$total_correct_responses);
-        $result_post_id = $this->crear_resultado($current_user->ID, $test_id, $user_responses, $total_correct_responses,$iq);
+        $iq = $this->calculate_iq($question_scales, $total_correct_responses);
+        $result_post_id = $this->create_result($current_user->ID, $test_id, $user_responses, $total_correct_responses, $iq);
 
         if (!$result_post_id) {
-            wp_send_json_error(array('message' => 'No se pudo crear el post de resultado.'));
+            wp_send_json_error(array('message' => 'Failed to create result post.'));
         }
 
         wp_send_json_success( ["test" => [
@@ -50,7 +50,7 @@ class IQTestResultManager
             'title' => $test->post_title,
             'content' => $test->post_content,
             "correct_responses" => $total_correct_responses,
-            "baremos" => $question_scales,
+            "scales" => $question_scales,
         ],
         "results" => [
             "user" =>  $current_user->data->display_name,
@@ -60,53 +60,52 @@ class IQTestResultManager
         ]]);
     }
 
-    private function procesar_respuestas($preguntas)
+    private function process_responses($questions)
     {
-        $respuestas_usuario = array();
+        $user_responses = array();
         $total_correct_responses = 0;
     
-        foreach ($preguntas as $index => $pregunta) {
+        foreach ($questions as $index => $question) {
             
             $i = $index;
-            $respuesta_usuario_key = 'q' . $i + 1;
+            $user_response_key = 'q' . ($i + 1);
             
-            
-            if (isset($_POST[$respuesta_usuario_key])) {
-                $respuesta_usuario_value = sanitize_text_field($_POST[$respuesta_usuario_key]);
-                $partes = explode('_', $respuesta_usuario_value);
-                $respuesta = end($partes);
+            if (isset($_POST[$user_response_key])) {
+                $user_response_value = sanitize_text_field($_POST[$user_response_key]);
+                $parts = explode('_', $user_response_value);
+                $response = end($parts);
                 
-                // Guardar la respuesta del usuario
-                $respuestas_usuario[$i] = array(
-                    'response_value' => $respuesta,
-                    "response_image" => $pregunta['question_options'][$respuesta-1]["option_image"]
+                // Save user response
+                $user_responses[$i] = array(
+                    'response_value' => $response,
+                    "response_image" => $question['question_options'][$response - 1]["option_image"]
                 );
     
-                // Verificar si la respuesta es correcta
-                foreach ($pregunta['question_options'] as $opcion_index => $opcion) {
-                    $key = ($index + 1) . "_" . ($opcion_index + 1);
-                    if ($opcion['correct'] === 'si' && $key === $respuesta) {
+                // Check if response is correct
+                foreach ($question['question_options'] as $option_index => $option) {
+                    $key = ($index + 1) . "_" . ($option_index + 1);
+                    if ($option['correct'] === 'yes' && $key === $response) {
                         $total_correct_responses++;
                         break;
                     }
                 }
             } else {
-                $respuestas_usuario[$i] = array(
+                $user_responses[$i] = array(
                     'response_value' => '',
                     "response_image" => null
                 );
             }
         }
     
-        $respuestas_usuario['total_correct_responses'] = $total_correct_responses;
-        return $respuestas_usuario;
+        $user_responses['total_correct_responses'] = $total_correct_responses;
+        return $user_responses;
     }
     
 
-    private function crear_resultado($user_id, $test_id, $respuestas, $total_correctas, $iq)
+    private function create_result($user_id, $test_id, $responses, $total_correct, $iq)
     {
         $result_post_args = array(
-            'post_title' => 'Resultado de Test ' . date('Y-m-d H:i:s'),
+            'post_title' => 'Test Result ' . date('Y-m-d H:i:s'),
             'post_content' => '',
             'post_status' => 'publish',
             'post_author' => $user_id,
@@ -119,32 +118,54 @@ class IQTestResultManager
             carbon_set_post_meta($result_post_id, 'user_id', $user_id);
             carbon_set_post_meta($result_post_id, 'test_id', $test_id);
             carbon_set_post_meta($result_post_id, 'result_date', current_time('mysql'));
-            carbon_set_post_meta($result_post_id, 'user_responses', $respuestas);
-            carbon_set_post_meta($result_post_id, 'total_correct_responses', $total_correctas);
+            carbon_set_post_meta($result_post_id, 'user_responses', $responses);
+            carbon_set_post_meta($result_post_id, 'total_correct_responses', $total_correct);
             carbon_set_post_meta($result_post_id, 'total_score', $iq);
         }
 
         return $result_post_id;
     }
 
-    public function ver_resultados($test_id) {
+    public function getTestResultsByUser(){
+        $args = array(
+            'post_type' => 'iq_result',
+            'post_status' => 'publish',
+            'meta_query' => array(
+                array(
+                    'key' => 'user_id',
+                    'value' => wp_get_current_user()->ID,
+                    'compare' => '=',
+                ),
+            ),
+        );
+    
+        $query = new WP_Query($args);
+        if (!$query->have_posts()) {
+            return new WP_Error('no_results', 'No results found for this user.', array('status' => 404));
+        }
+        return $query->posts;
+    }
+
+    public function viewResult($test_id) {
         $args = array(
             'post_type' => 'iq_test',
             'post_status' => 'publish',
-            "post_id" => $test_id
+            'p' => $test_id
         );
         $query = new WP_Query($args);
 
         if (!$query->have_posts()) {
-            return new WP_Error('no_results', 'No se encontraron test con ese id.', array('status' => 404));
+            return new WP_Error('no_results', 'No test found with this ID.', array('status' => 404));
         }
     
         $test = $query->posts[0];
     
         $current_user = wp_get_current_user();
+        
+     
     
-        if (!$this->usuario_tiene_orden(1, $test_id)) {
-            return new WP_Error('no_valid_order', 'No tiene una orden válida para este test.', array('status' => 403));
+        if (!$this->user_has_valid_subscription($current_user->ID)) {
+            return new WP_Error('no_valid_order', 'You do not have a valid order for this test.', array('status' => 403));
         }
     
         $args = array(
@@ -152,12 +173,12 @@ class IQTestResultManager
             'post_status' => 'publish',
             'meta_query' => array(
                 array(
-                    'key' => 'test',
+                    'key' => 'test_id',
                     'value' => $test_id,
                     'compare' => '=',
                 ),
                 array(
-                    'key' => 'usuario',
+                    'key' => 'user_id',
                     'value' => $current_user->ID,
                     'compare' => '=',
                 ),
@@ -167,7 +188,7 @@ class IQTestResultManager
         $query = new WP_Query($args);
 
         if (!$query->have_posts()) {
-            return new WP_Error('no_results', 'No se encontraron resultados para este test.', array('status' => 404));
+            return new WP_Error('no_results', 'No results found for this test.', array('status' => 404));
         }
     
         $result = $query->posts[0];
@@ -176,9 +197,9 @@ class IQTestResultManager
         $questions = carbon_get_post_meta($test_id, 'questions');
         $question_scales = carbon_get_post_meta($test_id, 'question_scales');
         
-        $correct_responses = $this->obtener_respuestas_correctas($questions);
-        $iq = $this->obtener_iq($question_scales, $total_correct_responses);
-        $usuario = get_user_by("ID", carbon_get_post_meta($result->ID, 'user_id'));
+        $correct_responses = $this->get_correct_responses($questions);
+        $iq = $this->calculate_iq($question_scales, $total_correct_responses);
+        $user = get_user_by("ID", carbon_get_post_meta($result->ID, 'user_id'));
 
         $response = array(
             "test" => [
@@ -187,10 +208,10 @@ class IQTestResultManager
                 'title' => $test->post_title,
                 'content' => $test->post_content,
                 "correct_responses" => $correct_responses,
-                "baremos" => $question_scales,
+                "scales" => $question_scales,
             ],
             "results" => [
-                "user" => $usuario->data->display_name,
+                "user" => $user->data->display_name,
                 'total_correct_responses' => $total_correct_responses,
                 'user_responses' => $user_responses,
                 "iq" => $iq
@@ -200,55 +221,55 @@ class IQTestResultManager
         return $response;
     }
 
-    public function obtener_iq($baremos, $correctas)
+    public function calculate_iq($scales, $correct)
     {
-        if (!$baremos) {
-            return null; // o un valor por defecto si no se encuentran baremos
+        if (!$scales) {
+            return null; // or a default value if no scales are found
         }
 
-        foreach ($baremos as $baremo) {
-            if (isset($baremo['scale_correct_count']) && isset($baremo['scale_iq'])) {
-                if ((int)$baremo['scale_correct_count'] == $correctas) {
-                    return (int)$baremo['scale_iq'];
+        foreach ($scales as $scale) {
+            if (isset($scale['scale_correct_count']) && isset($scale['scale_iq'])) {
+                if ((int)$scale['scale_correct_count'] == $correct) {
+                    return (int)$scale['scale_iq'];
                 }
             }
         }
 
-        return null; // o un valor por defecto si no se encuentra un baremo correspondiente
+        return null; // or a default value if no corresponding scale is found
     }
 
-    public function obtener_respuestas_correctas($array_objetos) {
-        $respuestas_correctas = [];
+    public function get_correct_responses($array_objects) {
+        $correct_responses = [];
     
-        foreach ($array_objetos as $objeto) {
-            if (isset($objeto['question_options']) && is_array($objeto['question_options'])) {
-                foreach ($objeto['question_options'] as $key => $opcion) {
-                    if (isset($opcion['correct']) && $opcion['correct'] === 'yes') {
-                        $respuestas_correctas[] = $key + 1;
+        foreach ($array_objects as $object) {
+            if (isset($object['question_options']) && is_array($object['question_options'])) {
+                foreach ($object['question_options'] as $key => $option) {
+                    if (isset($option['correct']) && $option['correct'] === 'yes') {
+                        $correct_responses[] = $key + 1;
                     }
                 }
             }
         }
     
-        return $respuestas_correctas;
+        return $correct_responses;
     }
 
-    private function usuario_tiene_orden($user_id, $test_id)
+    public function user_has_valid_subscription($user_id)
     {
-        $customer_orders = wc_get_orders(array(
-            'customer_id' => $user_id,
-            'status' => array('completed'),
-            'limit' => -1,
-        ));
+        
+        global $wpdb;
 
-        foreach ($customer_orders as $order) {
-            foreach ($order->get_items() as $item) {
-                if ($item->get_product_id() == 176) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
+        $table_name = $wpdb->prefix . 'woocommerce_p24_subscription';
+    
+        $query = "SELECT * FROM $table_name WHERE user_id = %d AND valid_to > NOW()";
+    
+        $results = $wpdb->get_results( $wpdb->prepare( $query, $user_id ) );
+    
+        return true;
+        //return ( $results ) ? true : false;
     }
+
+   
+    
 }
+
