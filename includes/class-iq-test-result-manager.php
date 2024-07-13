@@ -1,9 +1,10 @@
-<?php 
+<?php
 class IQTestResultManager
 {
     private static $instance = null;
 
-    private function __construct() {}
+    private function __construct()
+    {}
 
     public static function getInstance()
     {
@@ -29,7 +30,7 @@ class IQTestResultManager
             wp_send_json_error(array('message' => 'No questions found for this test.'));
         }
 
-        $user_responses = $this->process_responses($questions);
+        $user_responses = $this->processResponses($questions);
         $total_correct_responses = $user_responses['total_correct_responses'];
         unset($user_responses['total_correct_responses']);
 
@@ -37,14 +38,14 @@ class IQTestResultManager
 
         $current_user = wp_get_current_user();
         $question_scales = carbon_get_post_meta($test_id, 'question_scales');
-        $iq = $this->calculate_iq($question_scales, $total_correct_responses);
-        $result_post_id = $this->create_result($current_user->ID, $test_id, $user_responses, $total_correct_responses, $iq);
+        $iq = $this->calculateiq($question_scales, $total_correct_responses);
+        $result_post_id = $this->createResult($current_user->ID, $test_id, $user_responses, $total_correct_responses, $iq);
 
         if (!$result_post_id) {
             wp_send_json_error(array('message' => 'Failed to create result post.'));
         }
 
-        wp_send_json_success( ["test" => [
+        wp_send_json_success(["test" => [
             "questions" => $questions,
             'id' => $test_id,
             'title' => $test->post_title,
@@ -52,35 +53,68 @@ class IQTestResultManager
             "correct_responses" => $total_correct_responses,
             "scales" => $question_scales,
         ],
-        "results" => [
-            "user" =>  $current_user->data->display_name,
-            'total_correct_responses' => $total_correct_responses,
-            'user_responses' => $user_responses,
-            "iq" => $iq
-        ]]);
+            "results" => [
+                "user" => $current_user->data->display_name,
+                'total_correct_responses' => $total_correct_responses,
+                'user_responses' => $user_responses,
+                "iq" => $iq,
+            ]]);
     }
 
-    private function process_responses($questions)
+    public function addToCartAndRedirectToCheckout()
+    {
+        if (isset($_POST['product_id'])) {
+            $product_id = intval($_POST['product_id']);
+            $quantity = 1;
+            $cart = WC()->cart->get_cart();
+            $product_in_cart = false;
+            foreach ($cart as $cart_item_key => $cart_item) {
+                if ($cart_item['product_id'] == $product_id) {
+                    $product_in_cart = true;
+                    break;
+                }
+            }
+
+            if ($product_in_cart) {
+                wp_send_json_success();
+            }
+
+            // Si el producto no está en el carrito, añadirlo
+
+            $added = WC()->cart->add_to_cart($product_id, $quantity);
+
+            if (!$added) {
+                wp_send_json_error('Error al agregar el producto al carrito.');
+            }
+            wp_send_json_success();
+
+        } else {
+            wp_send_json_error();
+        }
+
+        wp_die();
+    }
+    private function processResponses($questions)
     {
         $user_responses = array();
         $total_correct_responses = 0;
-    
+
         foreach ($questions as $index => $question) {
-            
+
             $i = $index;
             $user_response_key = 'q' . ($i + 1);
-            
+
             if (isset($_POST[$user_response_key])) {
                 $user_response_value = sanitize_text_field($_POST[$user_response_key]);
                 $parts = explode('_', $user_response_value);
                 $response = end($parts);
-                
+
                 // Save user response
                 $user_responses[$i] = array(
                     'response_value' => $response,
-                    "response_image" => $question['question_options'][$response - 1]["option_image"]
+                    "response_image" => $question['question_options'][$response - 1]["option_image"],
                 );
-    
+
                 // Check if response is correct
                 foreach ($question['question_options'] as $option_index => $option) {
                     $key = ($index + 1) . "_" . ($option_index + 1);
@@ -92,17 +126,16 @@ class IQTestResultManager
             } else {
                 $user_responses[$i] = array(
                     'response_value' => '',
-                    "response_image" => null
+                    "response_image" => null,
                 );
             }
         }
-    
+
         $user_responses['total_correct_responses'] = $total_correct_responses;
         return $user_responses;
     }
-    
 
-    private function create_result($user_id, $test_id, $responses, $total_correct, $iq)
+    private function createResult($user_id, $test_id, $responses, $total_correct, $iq)
     {
         $result_post_args = array(
             'post_title' => 'Test Result ' . date('Y-m-d H:i:s'),
@@ -126,57 +159,13 @@ class IQTestResultManager
         return $result_post_id;
     }
 
-    public function getTestResultsByUser(){
+    public function viewAllResults()
+    {
+        $current_user =  wp_get_current_user();
         $args = array(
             'post_type' => 'iq_result',
             'post_status' => 'publish',
             'meta_query' => array(
-                array(
-                    'key' => 'user_id',
-                    'value' => wp_get_current_user()->ID,
-                    'compare' => '=',
-                ),
-            ),
-        );
-    
-        $query = new WP_Query($args);
-        if (!$query->have_posts()) {
-            return new WP_Error('no_results', 'No results found for this user.', array('status' => 404));
-        }
-        return $query->posts;
-    }
-
-    public function viewResult($test_id) {
-        $args = array(
-            'post_type' => 'iq_test',
-            'post_status' => 'publish',
-            'p' => $test_id
-        );
-        $query = new WP_Query($args);
-
-        if (!$query->have_posts()) {
-            return new WP_Error('no_results', 'No test found with this ID.', array('status' => 404));
-        }
-    
-        $test = $query->posts[0];
-    
-        $current_user = wp_get_current_user();
-        
-     
-    
-        if (!$this->user_has_valid_subscription($current_user->ID)) {
-            return new WP_Error('no_valid_order', 'You do not have a valid order for this test.', array('status' => 403));
-        }
-    
-        $args = array(
-            'post_type' => 'iq_result',
-            'post_status' => 'publish',
-            'meta_query' => array(
-                array(
-                    'key' => 'test_id',
-                    'value' => $test_id,
-                    'compare' => '=',
-                ),
                 array(
                     'key' => 'user_id',
                     'value' => $current_user->ID,
@@ -184,21 +173,51 @@ class IQTestResultManager
                 ),
             ),
         );
-    
+
+        if (!$this->userHasValidSubscription($current_user->ID)) {
+            return new WP_Error('no_valid_order', 'You do not have a valid subscription to view result of this test.', array('status' => 403));
+        }
+
+        $query = new WP_Query($args);
+        if (!$query->have_posts()) {
+            return new WP_Error('no_results', 'No results found for this user.', array('status' => 404));
+        }
+        return $query->posts;
+    }
+
+    public function viewResult($result_id)
+    {
+        $args = array(
+            'post_type' => 'iq_result',
+            'post_status' => 'publish',
+            'p' => $result_id,
+        );
         $query = new WP_Query($args);
 
         if (!$query->have_posts()) {
-            return new WP_Error('no_results', 'No results found for this test.', array('status' => 404));
+            return new WP_Error('no_results', 'No test results found with this ID.', array('status' => 404));
         }
-    
+
+        $result = $query->posts[0];
+
+        $current_user = wp_get_current_user();
+
+        if (!$this->userHasValidSubscription($current_user->ID)) {
+            return new WP_Error('no_valid_order', 'You do not have a valid subscription to view results of tests.', array('status' => 403));
+        }
+
+ 
+
         $result = $query->posts[0];
         $user_responses = carbon_get_post_meta($result->ID, 'user_responses');
         $total_correct_responses = carbon_get_post_meta($result->ID, 'total_correct_responses');
+        $test_id = carbon_get_post_meta($result->ID, 'test_id');
+        $test = get_post($test_id);
         $questions = carbon_get_post_meta($test_id, 'questions');
         $question_scales = carbon_get_post_meta($test_id, 'question_scales');
-        
-        $correct_responses = $this->get_correct_responses($questions);
-        $iq = $this->calculate_iq($question_scales, $total_correct_responses);
+
+        $correct_responses = $this->getCorrectResponses($questions);
+        $iq = $this->calculateIq($question_scales, $total_correct_responses);
         $user = get_user_by("ID", carbon_get_post_meta($result->ID, 'user_id'));
 
         $response = array(
@@ -214,14 +233,14 @@ class IQTestResultManager
                 "user" => $user->data->display_name,
                 'total_correct_responses' => $total_correct_responses,
                 'user_responses' => $user_responses,
-                "iq" => $iq
-            ]
+                "iq" => $iq,
+            ],
         );
-    
+
         return $response;
     }
 
-    public function calculate_iq($scales, $correct)
+    public function calculateIq($scales, $correct)
     {
         if (!$scales) {
             return null; // or a default value if no scales are found
@@ -229,8 +248,8 @@ class IQTestResultManager
 
         foreach ($scales as $scale) {
             if (isset($scale['scale_correct_count']) && isset($scale['scale_iq'])) {
-                if ((int)$scale['scale_correct_count'] == $correct) {
-                    return (int)$scale['scale_iq'];
+                if ((int) $scale['scale_correct_count'] == $correct) {
+                    return (int) $scale['scale_iq'];
                 }
             }
         }
@@ -238,9 +257,10 @@ class IQTestResultManager
         return null; // or a default value if no corresponding scale is found
     }
 
-    public function get_correct_responses($array_objects) {
+    public function getCorrectResponses($array_objects)
+    {
         $correct_responses = [];
-    
+
         foreach ($array_objects as $object) {
             if (isset($object['question_options']) && is_array($object['question_options'])) {
                 foreach ($object['question_options'] as $key => $option) {
@@ -250,26 +270,48 @@ class IQTestResultManager
                 }
             }
         }
-    
+
         return $correct_responses;
     }
 
-    public function user_has_valid_subscription($user_id)
+    public function userHasValidSubscription($user_id,$return = false)
     {
-        
+
         global $wpdb;
 
         $table_name = $wpdb->prefix . 'woocommerce_p24_subscription';
-    
+
         $query = "SELECT * FROM $table_name WHERE user_id = %d AND valid_to > NOW()";
-    
-        $results = $wpdb->get_results( $wpdb->prepare( $query, $user_id ) );
-    
-        return true;
-        //return ( $results ) ? true : false;
+
+        $results = $wpdb->get_results($wpdb->prepare($query, $user_id));
+
+        return ( $results ) ? true : false;
     }
 
-   
-    
-}
+    public function getLastIQResult($user_id) {
+        $args = array(
+            'post_type' => 'iq_result',
+            'post_status' => 'publish',
 
+            'orderby' => 'date',
+            'order' => 'DESC',
+            'posts_per_page' => 1,
+        );
+    
+        $query = new WP_Query($args);
+    
+        if ($query->have_posts()) {
+            $result = $query->posts[0];
+            
+            if ($this->userHasValidSubscription($user_id,true)) {
+                return $result;
+            } else {
+                return new WP_Error('no_valid_subscription', 'You do not have a valid subscription for this test.', array('status' => 403));
+            }
+        } else {
+            return new WP_Error('no_results', 'No results found for this user.', array('status' => 404));
+        }
+    }
+    
+
+}

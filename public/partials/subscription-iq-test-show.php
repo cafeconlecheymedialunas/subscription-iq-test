@@ -1,12 +1,17 @@
 <div class="subscription-iq-test-show">
     <?php if (!is_wp_error($result)): ?>
+        <div class="celebrities">
+            <?php echo do_shortcode('[SHORTCODE_ELEMENTOR id="1015"]'); ?>
+        </div>
+       
         <h1><?php echo $result["test"]["title"]; ?></h1>
-        <p>User: <?php echo $result['results']['user']; ?></p>
-        <p>Correct Answers: <?php echo $result['results']['total_correct_responses']; ?>/<?php echo count($result['test']['questions']); ?> </p>
         <h2 class="your-iq">
             <span>Your IQ:</span> 
             <span class="iq-number"><?php echo $result['results']['iq']; ?></span>
         </h2>
+        <p>User: <?php echo $result['results']['user']; ?></p>
+        <p>Correct Answers: <?php echo $result['results']['total_correct_responses']; ?>/<?php echo count($result['test']['questions']); ?> </p>
+      
         <div class="respuestas" style="background-image: url(http://booking-woocommerce-valijas.test:83/wp-content/uploads/2024/05/home-2.jpg);">
             <?php foreach ($result['test']['questions'] as $index => $pregunta): ?>
                 <?php $i = $index + 1;?>

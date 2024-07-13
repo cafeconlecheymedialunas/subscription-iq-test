@@ -210,7 +210,9 @@ class SubscriptionIqTest {
 		$this->loader->add_action( 'init',$plugin_public, 'add_my_custom_endpoint' );
 		$this->loader->add_filter('woocommerce_account_menu_items', $plugin_public,'remove_tabs_to_my_account', 9999);
 		$this->loader->add_filter('woocommerce_checkout_fields', $plugin_public, 'custom_override_checkout_fields');
-		$this->loader->add_action( 'woocommerce_account_iq-test_endpoint', $plugin_public, 'add_content_to_my_account' );
+		$this->loader->add_action('wp_ajax_add_to_cart_and_redirect', $IQTestResultManager,'addToCartAndRedirectToCheckout');
+		$this->loader->add_action('wp_ajax_nopriv_add_to_cart_and_redirect', $IQTestResultManager,'addToCartAndRedirectToCheckout');
+	
 
 	}
 

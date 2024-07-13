@@ -89,68 +89,106 @@ function iq_test_form_shortcode($atts)
 }
 add_shortcode('iq_test_form', 'iq_test_form_shortcode');
 
-
-
-add_action('wp_ajax_add_to_cart_and_redirect', 'add_to_cart_and_redirect');
-add_action('wp_ajax_nopriv_add_to_cart_and_redirect', 'add_to_cart_and_redirect');
-
-function add_to_cart_and_redirect()
-{
-    if (isset($_POST['product_id'])) {
-        $product_id = intval($_POST['product_id']);
-        $quantity = 1;
-        $cart = WC()->cart->get_cart();
-        $product_in_cart = false;
-        foreach ($cart as $cart_item_key => $cart_item) {
-            if ($cart_item['product_id'] == $product_id) {
-                $product_in_cart = true;
-                break;
-            }
-        }
-
-        if ($product_in_cart) {
-            wp_send_json_success();
-        }
-
-        // Si el producto no está en el carrito, añadirlo
-
-        $added = WC()->cart->add_to_cart($product_id, $quantity);
-
-        if (!$added) {
-            wp_send_json_error('Error al agregar el producto al carrito.');
-        }
-        wp_send_json_success();
-
-    } else {
-        wp_send_json_error();
-    }
-
-    wp_die();
-}
-
-
-
-
-
-
 add_action( 'woocommerce_account_iq-test_endpoint', 'add_content_to_my_account' );
-
 function add_content_to_my_account()
 {
     $iq_test_manager = IQTestResultManager::getInstance();
     ob_start();
-    if (isset($_GET["test_id"]) && !empty($_GET["test_id"])) {
-        $test_id = intval($_GET["test_id"]);
+    if (isset($_GET["result_id"]) && !empty($_GET["result_id"])) {
+        $result_id = intval($_GET["result_id"]);
 
-        $result = $iq_test_manager->viewResult($test_id);
+        $result = $iq_test_manager->viewResult($result_id);
 
-        require_once PLUGIN_URL . 'public/partials/subscription-iq-test-show.php';
+        require_once plugin_dir_path( __FILE__ ) . 'public/partials/subscription-iq-test-show.php';
 
     } else {
-        $testResults = $iq_test_manager->getTestResultsByUser();
-        require_once PLUGIN_URL . 'public/partials/subscription-iq-test-list.php';
+        $testResults = $iq_test_manager->viewAllResults();
+        require_once plugin_dir_path( __FILE__ ) .'public/partials/subscription-iq-test-list.php';
     }
 
     $content = ob_get_clean(); // Obtiene y limpia el contenido del búfer de salida
     echo $content;
 }
+
+// Función para redireccionar después del checkout y obtener el último resultado del test
+add_action('woocommerce_thankyou', 'redirect_after_checkout_and_get_last_iq_result', 10, 1);
+function redirect_after_checkout_and_get_last_iq_result($order_id) {
+    // Obtener el ID del usuario que realizó el pedido
+    $user_id = get_current_user_id();
+
+    // Obtener el último resultado del test IQ
+    $IQTestResultManager = IQTestResultManager::getInstance();
+    $result = $IQTestResultManager->getLastIQResult($user_id);
+
+    if (is_wp_error($result)) {
+        // Manejar el caso de error
+
+        wp_redirect('/my-account/iq-test/');
+        
+    }
+
+    // Redirigir a la página del resultado del test con el ID del test
+    wp_redirect('/my-account/iq-test/?result_id=' . $result->ID);
+    exit;
+}
+
+
+
+
+
+function iq_test_subscription_plans($atts)
+{
+
+    ob_start(); 
+
+    require_once plugin_dir_path(__FILE__) . 'public/partials/subscription-iq-test-plans.php';
+
+    return ob_get_clean(); // Devuelve el contenido del búfer de salida
+}
+add_shortcode('iq_test_subscription_plans', 'iq_test_subscription_plans');
+
+
+function add_login_logout_register_menu($items, $args) {
+    // Obtener el idioma actual usando Polylang
+    $current_lang = pll_current_language();
+
+    // Solo añadir los enlaces si es el menú principal
+    if ($args->theme_location != '') {
+        return $items;
+    }
+
+    // Definir los textos según el idioma
+    $login_text_en = 'Log In';
+    $login_text_pl = 'Log In';
+
+    $logout_text_en = 'Profile';
+    $logout_text_pl = 'Profil';
+
+    // Estructura HTML para los enlaces
+    $logout_link = '<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-logout"><a href="' . wc_get_account_endpoint_url( 'iq-test' ). 'iq-test'.'" class="elementor-item menu-link">' . ($current_lang == 'pl' ? $logout_text_pl : $logout_text_en) . '</a></li>';
+    
+    $login_link = '<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-login"><a href="' . wc_get_account_endpoint_url( 'iq-test' ) .'" class="elementor-item menu-link">' . ($current_lang == 'pl' ? $login_text_pl : $login_text_en) . '</a></li>';
+
+    // Añadir los enlaces al menú
+    if (is_user_logged_in()) {
+        $items .= $logout_link;
+    } else {
+        $items .= $login_link;
+    }
+
+    return $items;
+}
+
+add_filter('wp_nav_menu_items', 'add_login_logout_register_menu', 199, 2);
+
+
+
+
+
+
+
+
+
+
+
+

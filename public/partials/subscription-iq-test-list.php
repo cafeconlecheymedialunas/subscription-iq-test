@@ -1,19 +1,25 @@
-<?php echo do_shortcode('[SHORTCODE_ELEMENTOR id="1015"]'); 
+<?php if (!is_wp_error($testResults )): 
 ?>
+<div class="celebrities">
+<?php echo do_shortcode('[SHORTCODE_ELEMENTOR id="1015"]'); ?>
+</div>
+    
+
 
 
 <div class="list-test">
-<?php if (!is_wp_error($testResults )): 
+<?php
 
 foreach ($testResults as $result):
     $test_id = carbon_get_post_meta($result->ID, "test_id");
+    $test = get_post($test_id);
     $date = carbon_get_post_meta($result->ID, "result_date");
     $responses = carbon_get_post_meta($result->ID, "total_correct_responses");
     $time = Helper::pass_time($date);
     $questions = carbon_get_post_meta($test_id, "questions");
-    $test = get_post($test_id);
+    $result_post = get_post($result->ID);
     $current_url = add_query_arg(null, null); // obtiene la URL actual
-    $test_url = add_query_arg('test_id', $test_id, $current_url); // agrega el parámetro test_id a la URL actual
+    $test_url = add_query_arg('result_id', $result->ID, $current_url); // agrega el parámetro test_id a la URL actual
     ?>
     <a href="<?php echo esc_url($test_url); ?>">
     <div class="test-item">
@@ -29,7 +35,8 @@ foreach ($testResults as $result):
     </a>
 
 <?php endforeach;?>
-<?php else: ?>
-        <p><?php echo $result->get_error_message(); ?></p>
-    <?php endif;?>
+
 </div>
+<?php else: ?>
+        <p><?php echo $testResults->get_error_message(); ?></p>
+    <?php endif;?>
