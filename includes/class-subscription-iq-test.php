@@ -129,6 +129,7 @@ class SubscriptionIqTest {
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-iq-test.php';
 
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-result.php';
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-cancelation.php';
 
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-iq-test-result-manager.php';
 
@@ -168,6 +169,7 @@ class SubscriptionIqTest {
 
 		$iq_test = IqTest::getInstance();
 		$result = Result::getInstance();
+		$cancelation = Cancelation::getInstance();
 		
 
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
@@ -177,6 +179,8 @@ class SubscriptionIqTest {
 		$this->loader->add_action('carbon_fields_register_fields', $iq_test,'registerFields');
 		$this->loader->add_action( 'init', $result,"register" );
 		$this->loader->add_action('carbon_fields_register_fields', $result,'registerFields');
+		$this->loader->add_action( 'init', $cancelation,"register" );
+		$this->loader->add_action('carbon_fields_register_fields', $cancelation,'registerFields');
 
 
 	
@@ -210,8 +214,8 @@ class SubscriptionIqTest {
 		$this->loader->add_action( 'init',$plugin_public, 'add_my_custom_endpoint' );
 		$this->loader->add_filter('woocommerce_account_menu_items', $plugin_public,'remove_tabs_to_my_account', 9999);
 		$this->loader->add_filter('woocommerce_checkout_fields', $plugin_public, 'custom_override_checkout_fields');
-		$this->loader->add_action('wp_ajax_add_to_cart_and_redirect', $IQTestResultManager,'addToCartAndRedirectToCheckout');
-		$this->loader->add_action('wp_ajax_nopriv_add_to_cart_and_redirect', $IQTestResultManager,'addToCartAndRedirectToCheckout');
+		//$this->loader->add_action('wp_ajax_add_to_cart_and_redirect', $IQTestResultManager,'addToCartAndRedirectToCheckout');
+		//$this->loader->add_action('wp_ajax_nopriv_add_to_cart_and_redirect', $IQTestResultManager,'addToCartAndRedirectToCheckout');
 	
 
 	}

@@ -12,6 +12,13 @@ $args = array(
 
 $query = new WP_Query($args);
 
+$IQTestResultManager = IQTestResultManager::getInstance();
+
+
+
+
+$result_id = isset($_GET['result_id']) ? intval($_GET['result_id']) : '';
+
 if ($query->have_posts()) : ?>
     <div class="pricing-container">
         <ul class="pricing-list bounce-invert">
@@ -32,14 +39,43 @@ if ($query->have_posts()) : ?>
                     </header>
                     <div class="pricing-body">
                         <ul class="pricing-features">
-                           <?php the_content();?>
+                            <?php the_content();?>
                         </ul>
                     </div>
                     <footer class="pricing-footer">
-                            <button id="custom-add-to-cart" data-product-id="<?php the_ID(  );?>"  class="select">Subscribe now
-                                <span class="spinner" style="display:none;">&#x21BB;</span> <!-- Spinner -->
-                            </button>
-                           
+                    <?php
+                        $subscription = $IQTestResultManager->getActiveSubscription(get_current_user_id(), get_the_ID());
+                        $subscription_cancelled = $IQTestResultManager->getCancelledSubscription( get_current_user_id(),get_the_ID());
+                        if (is_wp_error($subscription)) {
+                            echo '<div>Error retrieving subscription: ' . $subscription->get_error_message() . '</div>';
+                        } elseif (is_wp_error($subscription_cancelled)) {
+                            echo '<div>Error retrieving cancellation: ' . $subscription_cancelled->get_error_message() . '</div>';
+                        } else {
+                            if (!$subscription) : ?>
+                                <form method="post" class="subscription-form">
+                                    <input type="hidden" name="result_id" value="<?php echo $result_id; ?>">
+                                    <input type="hidden" name="product_id" value="<?php echo get_the_ID(); ?>">
+                                    <button type="submit" class="subscribe-button"><?php echo __("Subscribe now"); ?>
+                                        <span class="spinner" style="display:none;">&#x21BB;</span>
+                                    </button>
+                                </form>
+                            <?php else :
+                                if (!$subscription_cancelled) : ?>
+                                    <form method="post" class="cancel-subscription">
+                                        <input type="hidden" name="product_id" value="<?php echo get_the_ID(); ?>">
+                                        <input type="hidden" name="result_id" value="<?php echo $result_id; ?>">
+                                        <button type="submit" class="subscribe-button">Cancel Subscription
+                                            <span class="spinner" style="display:none;">&#x21BB;</span>
+                                        </button>
+                                    </form>
+                                <?php else : ?>
+                                    <div>
+                                        <h3>Your subscription has been canceled.</h3>
+                                        <p>You will continue to have access until the <?php echo $subscription->valid_to; ?>. After which it will not be automatically renewed.</p>
+                                    </div>
+                                <?php endif; ?>
+                            <?php endif;
+                        } ?>
                     </footer>
                 </li>
             <?php endwhile; ?>

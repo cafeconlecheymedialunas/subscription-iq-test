@@ -34,26 +34,55 @@ class IQTestResultManager
         $total_correct_responses = $user_responses['total_correct_responses'];
         unset($user_responses['total_correct_responses']);
 
+        if (!$user_responses) {
+            wp_send_json_error(array('message' => 'Failed to create user responses.'));
+        }
+
+
         $test = get_post($test_id);
 
         $current_user = wp_get_current_user();
         $question_scales = carbon_get_post_meta($test_id, 'question_scales');
         $iq = $this->calculateiq($question_scales, $total_correct_responses);
-        $result_post_id = $this->createResult($current_user->ID, $test_id, $user_responses, $total_correct_responses, $iq);
 
+
+        if (!$iq) {
+            wp_send_json_error(array('message' => 'Failed to create the iq score.'));
+        }
+        $result_post_id = $this->createResult($current_user->ID, $test_id, $user_responses, $total_correct_responses, $iq);
+       
         if (!$result_post_id) {
             wp_send_json_error(array('message' => 'Failed to create result post.'));
         }
 
-        wp_send_json_success(["test" => [
-            "questions" => $questions,
-            'id' => $test_id,
-            'title' => $test->post_title,
-            'content' => $test->post_content,
-            "correct_responses" => $total_correct_responses,
-            "scales" => $question_scales,
-        ],
+
+        $user_id = get_current_user_id();
+       
+
+        $userHasSubscription = $this->userHasValidSubscription();
+
+
+      
+
+        $subscription = $this->getActiveSubscription($user_id,176);
+    
+
+        wp_send_json_success([
+            "user" =>[
+                "has_valid_subscription" => (!$userHasSubscription)?false:true,
+                "user_id" => $user_id,
+                "subscription" =>$subscription
+            ],
+            "test" => [
+                "questions" => $questions,
+                'id' => $test_id,
+                'title' => $test->post_title,
+                'content' => $test->post_content,
+                "correct_responses" => $total_correct_responses,
+                "scales" => $question_scales,
+            ],
             "results" => [
+                "result_id" =>$result_post_id,
                 "user" => $current_user->data->display_name,
                 'total_correct_responses' => $total_correct_responses,
                 'user_responses' => $user_responses,
@@ -162,6 +191,11 @@ class IQTestResultManager
     public function viewAllResults()
     {
         $current_user =  wp_get_current_user();
+     
+
+        if (!$this->userHasValidSubscription()) {
+            return new WP_Error('no_valid_order', 'You do not have a valid subscription to view result of this test.', array('status' => 403));
+        }
         $args = array(
             'post_type' => 'iq_result',
             'post_status' => 'publish',
@@ -173,11 +207,6 @@ class IQTestResultManager
                 ),
             ),
         );
-
-        if (!$this->userHasValidSubscription($current_user->ID)) {
-            return new WP_Error('no_valid_order', 'You do not have a valid subscription to view result of this test.', array('status' => 403));
-        }
-
         $query = new WP_Query($args);
         if (!$query->have_posts()) {
             return new WP_Error('no_results', 'No results found for this user.', array('status' => 404));
@@ -202,7 +231,7 @@ class IQTestResultManager
 
         $current_user = wp_get_current_user();
 
-        if (!$this->userHasValidSubscription($current_user->ID)) {
+        if (!$this->userHasValidSubscription()) {
             return new WP_Error('no_valid_order', 'You do not have a valid subscription to view results of tests.', array('status' => 403));
         }
 
@@ -274,19 +303,85 @@ class IQTestResultManager
         return $correct_responses;
     }
 
-    public function userHasValidSubscription($user_id,$return = false)
+    public function userHasValidSubscription()
     {
+        global $wpdb;
 
+        $user_id = get_current_user_id();
+    
+        $table_name = $wpdb->prefix . 'woocommerce_p24_subscription';
+    
+        $query = "SELECT * FROM $table_name WHERE user_id = %d AND valid_to > NOW()";
+    
+        // Ejecutar la consulta preparada
+        $results = $wpdb->get_results($wpdb->prepare($query, $user_id));
+    
+        // Verificar si hay un error en la consulta
+      
+        if (empty($results)) {
+            return false;
+        }
+    
+        return true;
+    }
+    public function getCancelledSubscription($user_id,$product_id)
+    {
+        $args = array(
+            'post_type' => 'cancelation',
+            'post_status' => 'publish',
+            'meta_query' => array(
+                array(
+                    'key' => 'user',
+                    'value' => $user_id,
+                    'compare' => '=',
+                ),
+                array(
+                    'key' => 'subscription',
+                    'value' => $product_id,
+                    'compare' => '=',
+                ),
+            ),
+        );
+        
+        $query = new WP_Query($args);
+    
+        if (is_wp_error($query)) {
+            return new WP_Error('query_error', 'There is a problem with query');
+        }
+    
+        return (!empty($query->posts)) ? $query->posts[0] : false;
+    }
+    
+
+
+    public function getActiveSubscription($user_id, $product_id){
         global $wpdb;
 
         $table_name = $wpdb->prefix . 'woocommerce_p24_subscription';
 
-        $query = "SELECT * FROM $table_name WHERE user_id = %d AND valid_to > NOW()";
+        $query = "
+            SELECT * 
+            FROM $table_name 
+            WHERE user_id = %d 
+            AND product_id = %d
+            AND valid_to > NOW()
+        ";
 
-        $results = $wpdb->get_results($wpdb->prepare($query, $user_id));
+        $results = $wpdb->get_results($wpdb->prepare($query, $user_id, $product_id));
+        
+        if ($wpdb->last_error) {
+            return false;
+        }
 
-        return ( $results ) ? true : false;
+        if (empty($results)) {
+            return false;
+        }
+
+        return $results[0];
     }
+
+    
+
 
     public function getLastIQResult($user_id) {
         $args = array(
@@ -303,7 +398,7 @@ class IQTestResultManager
         if ($query->have_posts()) {
             $result = $query->posts[0];
             
-            if ($this->userHasValidSubscription($user_id,true)) {
+            if ($this->userHasValidSubscription()) {
                 return $result;
             } else {
                 return new WP_Error('no_valid_subscription', 'You do not have a valid subscription for this test.', array('status' => 403));
@@ -315,3 +410,5 @@ class IQTestResultManager
     
 
 }
+
+

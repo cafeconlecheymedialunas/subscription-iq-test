@@ -103,11 +103,11 @@ class SubscriptionIqTestPublic {
 
 		 wp_enqueue_script("js_subs", PLUGIN_URL. 'public/js/subscription-iq-test-public.js', array('jquery'), "1.0.0", false);
 
-		 wp_localize_script("js_subs", 'wc_add_to_cart_params', array(
+		 wp_localize_script("js_subs", 'ajax_object', array(
 			 'ajax_url' => admin_url('admin-ajax.php'),
 			 'nonce' => wp_create_nonce('add_to_cart_nonce'),
-			 'redirect_url' => wc_get_checkout_url(),
-			 "product_id" => 867
+			 'checkout_url' => wc_get_checkout_url(),
+			 "subscription_plans_url" =>  carbon_get_theme_option("url_subscription_plans")
 		 ));
 	 
 		 wp_enqueue_style(

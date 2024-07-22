@@ -22,16 +22,34 @@
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
-  max-width: 600px;
+  max-width: 450px;
   margin: 30px auto 0 a;
 }
 
 .subscription-iq-test-form .options label {
-  width: calc(33.3% - 40px);
+  width: calc(33.33% - 20px);
+}
+
+.subscription-iq-test-form .options label .label-container {
+  padding: 5px;
+  font-size: 24px;
+  text-align: center;
+  cursor: pointer;
+  outline: none;
+  color: #000;
+  background-color: white;
+  border: 1px solid #00092A;
+  border-radius: 5px;
+  box-shadow: 4px 4px 8px rgba(0, 9, 42, 0.5); /* Ajusta la sombra de los botones no seleccionados */
+  transition: box-shadow 0.1s ease-in-out;
   display: flex;
+  flex-direction: column;
   justify-content: center;
-  /* height: 100px; */
-  /* padding: 20px 0; */
+  align-items: center;
+}
+
+.subscription-iq-test-form .options label.current .label-container {
+  box-shadow: 1px 1px 4px rgba(0, 9, 42, 0.7); /* Sombra más pequeña y más densa para el botón seleccionado */
 }
 
 .subscription-iq-test-form .options input {

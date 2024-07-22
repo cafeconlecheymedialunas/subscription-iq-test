@@ -110,27 +110,7 @@ function add_content_to_my_account()
     echo $content;
 }
 
-// Función para redireccionar después del checkout y obtener el último resultado del test
-add_action('woocommerce_thankyou', 'redirect_after_checkout_and_get_last_iq_result', 10, 1);
-function redirect_after_checkout_and_get_last_iq_result($order_id) {
-    // Obtener el ID del usuario que realizó el pedido
-    $user_id = get_current_user_id();
 
-    // Obtener el último resultado del test IQ
-    $IQTestResultManager = IQTestResultManager::getInstance();
-    $result = $IQTestResultManager->getLastIQResult($user_id);
-
-    if (is_wp_error($result)) {
-        // Manejar el caso de error
-
-        wp_redirect('/my-account/iq-test/');
-        
-    }
-
-    // Redirigir a la página del resultado del test con el ID del test
-    wp_redirect('/my-account/iq-test/?result_id=' . $result->ID);
-    exit;
-}
 
 
 
@@ -180,6 +160,151 @@ function add_login_logout_register_menu($items, $args) {
 }
 
 add_filter('wp_nav_menu_items', 'add_login_logout_register_menu', 199, 2);
+
+
+
+use Carbon_Fields\Container;
+use Carbon_Fields\Field;
+
+add_action( 'carbon_fields_register_fields', 'crb_attach_theme_options' );
+function crb_attach_theme_options() {
+    Container::make( 'theme_options', __( 'Subscription Iq Options' ) )
+        ->add_fields( array(
+            Field::make( 'association', 'url_subscription_plans', 'Subscription Plans Page' )->set_types( array(
+                array(
+                    'type'      => 'post',
+                    'post_type' => 'page',
+                )
+            ) ),
+           
+        ) );
+        
+}
+
+
+
+
+add_action('wp_ajax_add_to_cart_and_redirect', 'addToCartAndRedirectToCheckout');
+add_action('wp_ajax_nopriv_add_to_cart_and_redirect', 'addToCartAndRedirectToCheckout');
+
+function addToCartAndRedirectToCheckout()
+{
+    if (isset($_POST['product_id'])) {
+        $product_id = intval($_POST['product_id']);
+        $result_id = intval($_POST['result_id']);
+        $quantity = 1;
+        $cart = WC()->cart->get_cart();
+        $product_in_cart = false;
+
+        // Verificar si el producto ya está en el carrito
+        foreach ($cart as $cart_item_key => $cart_item) {
+            if ($cart_item['product_id'] == $product_id) {
+                $product_in_cart = true;
+                break;
+            }
+        }
+
+        if ($product_in_cart) {
+            wp_send_json_success();
+        }
+
+        // Si el producto no está en el carrito, añadirlo
+        $cart_item_data = array('result_id' => $result_id);
+        $added = WC()->cart->add_to_cart($product_id, $quantity, '', '', $cart_item_data);
+
+        if (!$added) {
+            wp_send_json_error('Error al agregar el producto al carrito.');
+        }
+
+        wp_send_json_success();
+
+    } else {
+        wp_send_json_error('ID de producto no válido.');
+    }
+
+    wp_die();
+}
+
+
+
+
+add_action('wp_ajax_cancel_subscription', 'cancel_subscription');
+add_action('wp_ajax_nopriv_cancel_subscription', 'cancel_subscription');
+
+function cancel_subscription()
+{
+    if (isset($_POST['product_id'])) {
+        $product_id = intval($_POST['product_id']);
+
+        $product = get_post($product_id);
+
+        if(is_wp_error($product)){
+            wp_send_json_error('Error creating cancelation post  .');
+        }
+    
+        $user = wp_get_current_user();
+        $current_time = current_time('mysql');
+
+
+        $iqResultManager = IQTestResultManager::getInstance();
+
+        $cancelation =  $iqResultManager->getCancelled($user->ID,$product_id);
+
+        if($cancelation){
+            wp_send_json_error("This order has already been canceled before");
+        }
+        // Crear el post de cancelación
+        $cancelation_post = array(
+            'post_title'    => 'Cancelation for ' . $product->post_title . ". Usuario:". $user->name. " - ".  $current_time,
+            'post_status'   => 'publish',
+            'post_type'     => 'cancelation',
+        );
+
+        $post_id = wp_insert_post($cancelation_post);
+
+        // Guardar los campos personalizados
+        if (!is_wp_error($post_id)) {
+            carbon_set_post_meta($post_id, 'user', [$user->ID]);
+            carbon_set_post_meta($post_id, 'subscription_id', $product_id);
+            carbon_set_post_meta($post_id, 'cancelation_date', $current_time);
+
+
+            wp_send_json_success("Your subscription has been successfully canceled. You will continue to have access until the expiration date, after which it will not be automatically renewed.");
+        } else {
+            wp_send_json_error('Error creating cancelation post.');
+        }
+    } else {
+        wp_send_json_error('Invalid product ID or result ID.');
+    }
+
+    wp_die();
+}
+
+add_action('woocommerce_checkout_create_order', 'add_result_id_to_order', 20, 2);
+function add_result_id_to_order($order, $data)
+{
+    foreach (WC()->cart->get_cart() as $cart_item_key => $cart_item) {
+        if (isset($cart_item['result_id'])) {
+            $order->update_meta_data('result_id', $cart_item['result_id']);
+        }
+    }
+}
+
+
+add_action('woocommerce_thankyou', 'redirect_after_checkout_and_get_last_iq_result', 10, 1);
+function redirect_after_checkout_and_get_last_iq_result($order_id)
+{
+    $order = wc_get_order($order_id);
+    $result_id = $order->get_meta('result_id');
+    $myaccount_url = get_permalink(get_option('woocommerce_myaccount_page_id'));
+
+    if ($result_id) {
+        wp_redirect($myaccount_url . '/iq-test/?result_id=' . $result_id);
+    }
+
+    exit;
+}
+
 
 
 
